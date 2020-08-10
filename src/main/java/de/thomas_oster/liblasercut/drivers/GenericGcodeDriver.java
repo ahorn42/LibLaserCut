@@ -473,8 +473,8 @@ public class GenericGcodeDriver extends LaserCutter {
   }
   protected double currentPower = -1;
   protected double currentSpeed = -1;
-  private double nextPower = -1;
-  private double nextSpeed = -1;
+  protected double nextPower = -1;
+  protected double nextSpeed = -1;
   private double currentFocus = 0;
 
   protected void setSpeed(double speedInPercent) {

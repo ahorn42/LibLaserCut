@@ -40,22 +40,23 @@ public class LibInfo
   public static List<Class<? extends LaserCutter>> getSupportedDrivers()
   {
     return Arrays.asList(
-      EpilogZing.class,
-      EpilogHelix.class,
-      LaosCutter.class,
-      GoldCutHPGL.class,
-      Lasersaur.class,
+      DexArm.class,
       Dummy.class,
-      IModelaMill.class,
-      SampleDriver.class,
-      MakeBlockXYPlotter.class,
-      GenericGcodeDriver.class,
-      Grbl.class,
-      SmoothieBoard.class,
-      Marlin.class,
+      EpilogHelix.class,
+      EpilogZing.class,
       FullSpectrumCutter.class,
+      GenericGcodeDriver.class,
+      GoldCutHPGL.class,
+      Grbl.class,
+      IModelaMill.class,
+      K40NanoDriver.class,
+      LaosCutter.class,
+      Lasersaur.class,
       LaserToolsTechnicsCutter.class,
-      K40NanoDriver.class
+      MakeBlockXYPlotter.class,
+      Marlin.class,
+      SampleDriver.class,
+      SmoothieBoard.class
     );
   }
 }
