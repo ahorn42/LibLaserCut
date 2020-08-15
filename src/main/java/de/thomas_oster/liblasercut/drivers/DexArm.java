@@ -38,26 +38,29 @@ import java.util.List;
 
 import javax.smartcardio.ATR;
 
-/**
- * This class should act as a starting-point, when implementing a new Lasercutter driver.
- * It will take a Laserjob and just output the Vecor-Parts as G-Code.
- * 
- * The file contains comments prefixed with "#<step>" which should guide you in the process
- * of creating custom drivers. Also read the information in the Wiki on
- * https://github.com/t-oster/VisiCut/wiki/
- * 
- * #1: Create a new JavaClass, which extends the de.thomas_oster.liblasercut.drivers.LaserCutter class
- * #2: Implement all abstract methods. Each of them is explained in this example.
- * #3: In Order to see your driver in VisiCut, add your class to the getSupportedDrivers() method
- * in the de.thomas_oster.liblasercut.LibInfo class (src/de/thomas_oster/liblasercut/LibInfo.java)
- * 
- * @author Thomas Oster
- */
 public class DexArm extends Marlin {
   protected static final String SETTING_PEN_DROP_DISTANCE = "Pen drop distance (in mm)";
   protected static final String SETTING_LIFT_PEN_AFTER_EVERY_LINE = "Lift pen after every line";
 
+  /**
+   * This is the height the pen gets dropped down from WCS Z0.
+   */
   protected Double penDropDistance = 10.0;
+
+  /**
+   * If this is true, the pen will be lifted after every single line operation and
+   * not only during moving operations. This might beusefull when there are a lot
+   * of sharp angles in the lines that would lead to a bending of the pen in the
+   * corners.
+   */
+  protected Boolean liftPenAfterEveryLine = false;
+
+  public DexArm() {
+    // remove homing and M5 (which shouldn't be available on Marlin anyway?!)
+    setPreJobGcode(getPreJobGcode().replace(",G28 XY,M5", ""));
+    // add returning to Z0 after the job and remove M5 and homing at the end.
+    setPostJobGcode("G0 Z0," + getPostJobGcode().replace(",M5,G28 XY", ""));
+  }
 
   public Double getPenDropDistance() {
     return penDropDistance;
@@ -67,19 +70,12 @@ public class DexArm extends Marlin {
     this.penDropDistance = penDropDistance;
   }
 
-  protected Boolean liftPenAfterEveryLine = false;
-
   public Boolean getLiftPenAfterEveryLine() {
     return liftPenAfterEveryLine;
   }
 
   public void setLiftPenAfterEveryLine(Boolean liftPenAfterEveryLine) {
     this.liftPenAfterEveryLine = liftPenAfterEveryLine;
-  }
-
-  public DexArm() {
-    setPreJobGcode(getPreJobGcode().replace(",G28 XY,M5", ""));
-    setPostJobGcode("G0 Z0," + getPostJobGcode().replace(",M5,G28 XY", ""));
   }
 
   @Override
@@ -91,13 +87,10 @@ public class DexArm extends Marlin {
     // lift pen
     sendLine("G0 Z0");
 
-    if (blankLaserDuringRapids)
-    {
+    if (blankLaserDuringRapids) {
       currentPower = 0.0;
       sendLine("G0 X%f Y%f F%d S0", x, y, (int) (travel_speed));
-    }
-    else
-    {
+    } else {
       sendLine("G0 X%f Y%f F%d", x, y, (int) (travel_speed));
     }
   }
@@ -107,101 +100,49 @@ public class DexArm extends Marlin {
     x = isFlipXaxis() ? getBedWidth() - Util.px2mm(x, resolution) : Util.px2mm(x, resolution);
     y = isFlipYaxis() ? getBedHeight() - Util.px2mm(y, resolution) : Util.px2mm(y, resolution);
     String append = "";
-    if (nextPower != currentPower)
-    {
+    if (nextPower != currentPower) {
       append += String.format(FORMAT_LOCALE, " S%f", nextPower);
       currentPower = nextPower;
     }
-    if (nextSpeed != currentSpeed)
-    {
-      append += String.format(FORMAT_LOCALE, " F%d", (int) (max_speed*nextSpeed/100.0));
+    if (nextSpeed != currentSpeed) {
+      append += String.format(FORMAT_LOCALE, " F%d", (int) (max_speed * nextSpeed / 100.0));
       currentSpeed = nextSpeed;
     }
 
     // drop pen
     sendLine("G0 Z-%f", this.penDropDistance);
-    sendLine("G1 X%f Y%f"+append, x, y);
+    sendLine("G1 X%f Y%f" + append, x, y);
 
     if (this.liftPenAfterEveryLine) {
       // lift pen
       sendLine("G0 Z0");
     }
   }
-  
-  // /**
-  //  * This method should return an Object of a class extending LaserProperty.
-  //  * A LaserProperty represents all settings for your device like power,speed and frequency
-  //  * which are necessary for a certain job-type (e.g. a VectorPart).
-  //  * See the different classes for examples. We will just use the default,
-  //  * supporting power,speed focus and frequency.
-  //  */
-  // @Override
-  // public LaserProperty getLaserPropertyForVectorPart() {
-  //     return new PowerSpeedFocusFrequencyProperty();
-  // }
-  
 
-  // /**
-  //  * This method should return a list of all supported resolutions (in DPI)
-  //  */
-  // @Override
-  // public List<Double> getResolutions()
-  // {
-  //   return Arrays.asList(100.0,200.0,500.0,1000.0);
-  // }
-
-  // /**
-  //  * This method should return the width of the laser-bed. You can have
-  //  * a config-setting in order to have different sizes for each instance of 
-  //  * your driver. For simplicity we just assume a width of 600mm
-  //  */
-  // @Override
-  // public double getBedWidth()
-  // {
-  //   return 600;
-  // }
-
-  // /**
-  //  * This method should return the height of the laser-bed. You can have
-  //  * a config-setting in order to have different sizes for each instance of 
-  //  * your driver. For simplicity we just assume a height of 300mm
-  //  */
-  // @Override
-  // public double getBedHeight()
-  // {
-  //   return 300;
-  // }
-
-  /**
-   * This method should return a name for this driver.
-   */
   @Override
-  public String getModelName()
-  {
+  public String getModelName() {
     return "DexArm Driver";
   }
 
-  /**
-   * This method must copy the current instance with all config settings, because
-   * it is used for save- and restoring
-   */
   @Override
-  public DexArm clone()
-  {
+  public DexArm clone() {
     DexArm clone = new DexArm();
-    //TODO: copy all settings to the clone if present.
     clone.copyProperties(this);
     return clone;
   }
 
-
   @Override
   public String[] getPropertyKeys() {
     List<String> result = new LinkedList<>(Arrays.asList(super.getPropertyKeys()));
+
+    // remove unused properties from Marlin
     result.remove(GenericGcodeDriver.SETTING_FLIP_X);
     result.remove(GenericGcodeDriver.SETTING_FLIP_Y);
+
+    // add DexArm specific properties
     result.add(DexArm.SETTING_PEN_DROP_DISTANCE);
     result.add(DexArm.SETTING_LIFT_PEN_AFTER_EVERY_LINE);
+
     return result.toArray(new String[0]);
   }
 
