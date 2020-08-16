@@ -80,8 +80,8 @@ public class DexArm extends Marlin {
 
   @Override
   protected void move(PrintStream out, double x, double y, double resolution) throws IOException {
-    x = isFlipXaxis() ? getBedWidth() - Util.px2mm(x, resolution) : Util.px2mm(x, resolution);
-    y = isFlipYaxis() ? getBedHeight() - Util.px2mm(y, resolution) : Util.px2mm(y, resolution);
+    x = Util.px2mm(x, resolution);
+    y = -Util.px2mm(y, resolution);
     currentSpeed = getTravel_speed();
 
     // lift pen
@@ -97,8 +97,8 @@ public class DexArm extends Marlin {
 
   @Override
   protected void line(PrintStream out, double x, double y, double resolution) throws IOException {
-    x = isFlipXaxis() ? getBedWidth() - Util.px2mm(x, resolution) : Util.px2mm(x, resolution);
-    y = isFlipYaxis() ? getBedHeight() - Util.px2mm(y, resolution) : Util.px2mm(y, resolution);
+    x = Util.px2mm(x, resolution);
+    y = -Util.px2mm(y, resolution);
     String append = "";
     if (nextPower != currentPower) {
       append += String.format(FORMAT_LOCALE, " S%f", nextPower);
